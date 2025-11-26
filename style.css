@@ -29,10 +29,20 @@ canvas {
   justify-content: center;
   align-items: center;
   z-index: 10;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 #titleScreen button {
   padding: 10px 20px;
   font-size: 20px;
   cursor: pointer;
+  margin-top: 20px;
+}
+
+#instructions {
+  text-align: left;
+  max-width: 600px;
+  margin-top: 20px;
+  line-height: 1.5;
 }
