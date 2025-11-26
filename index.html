@@ -1,31 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rockets vs Cars Ultimate</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Rockets vs Cars — Floating Island</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="titleScreen">
-  <h1>Rockets vs Cars Ultimate</h1>
+  <h1>Rockets vs Cars — Floating Island</h1>
+
   <div id="instructions">
-    <p><strong>Aim:</strong> Survive or destroy the cars before they take out you or your NPCs!</p>
-    <p><strong>Player Controls:</strong> Move: A/D | Jump: W | Shoot: Click toward cursor</p>
-    <p><strong>NPCs:</strong> Start with 1 NPC. Buy more in the shop with points earned from destroying cars.</p>
-    <p><strong>Cars:</strong> Move randomly and jump to hit the NPCs or player.</p>
+    <p><strong>Aim:</strong> Survive or destroy the cars. Protect your NPC allies on the floating island!</p>
+    <p><strong>Controls:</strong> Move: A / D — Jump: W — Shoot: Click toward the cursor</p>
+    <p><strong>NPCs:</strong> Start with 1. Buy more in the shop (100 points each). NPCs wander the island and have 3 lives each.</p>
+    <p><strong>Cars:</strong> Roam and jump up to the island to smash NPCs or the player. They have jump cooldowns.</p>
+
     <div id="diagram">
       <div class="player">Cube = Player</div>
       <div class="car">Rectangle = Car</div>
       <div class="npc">Small Cube = NPC</div>
     </div>
   </div>
+
   <div id="shop">
     <p>Points: <span id="shopPoints">0</span></p>
-    <button id="buyNPC">Buy NPC (100 points)</button>
+    <button id="buyNPC">Buy NPC (+1) — 100 points</button>
+    <p style="margin-top:8px;color:#ddd">Owned NPCs: <span id="ownedNPCs">1</span></p>
   </div>
-  <button id="startGame">Start Game</button>
+
+  <div style="margin-top:18px">
+    <button id="startGame">Start Game</button>
+  </div>
 </div>
 
 <div id="hud">
@@ -35,7 +42,7 @@
   <span id="timer">Time: 60</span>
 </div>
 
-<canvas id="gameCanvas" width="1600" height="800"></canvas>
+<canvas id="gameCanvas" width="1600" height="900"></canvas>
 
 <script src="script.js"></script>
 </body>
