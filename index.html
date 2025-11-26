@@ -11,18 +11,23 @@
 <div id="titleScreen">
   <h1>Rockets vs Cars</h1>
   <div id="instructions">
-    <p><strong>Aim of the Game:</strong> Destroy all cars using your rocket launcher!</p>
-    <p><strong>Player:</strong> Move with A/D, Jump with W, Shoot with Arrow Keys + Space.</p>
-    <p><strong>NPC Allies:</strong> Help you by shooting cars automatically, but fire slower.</p>
-    <p><strong>Cars:</strong> Jump randomly and try to stay inside the arena. Avoid them!</p>
-    <p><strong>Win Condition:</strong> Destroy all cars to win. Lose if your health reaches 0.</p>
+    <p><strong>Aim:</strong> Destroy all cars before they hit you or your NPC allies!</p>
+    <p><strong>Controls:</strong> Move: A/D | Jump: W | Shoot: Arrow Keys + Space</p>
+    <p><strong>NPCs:</strong> Help you by shooting cars automatically but slower.</p>
+    <p><strong>Cars:</strong> Jump and try to hit you. Avoid them!</p>
+    <p><strong>Lives:</strong> You and NPCs have 3 lives each. Lose all lives → Game Over.</p>
+    <div id="diagram">
+      <div class="player">Cube = Player</div>
+      <div class="car">Rectangle = Car</div>
+      <div class="npc">Small Cube = NPC</div>
+    </div>
   </div>
   <button id="startGame">Start Game</button>
 </div>
 
 <div id="hud">
   <span id="score">Score: 0</span>
-  <span id="health">Player Health: 100</span>
+  <span id="lives">Lives: 3</span>
 </div>
 
 <canvas id="gameCanvas" width="1400" height="800"></canvas>
