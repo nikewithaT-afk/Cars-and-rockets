@@ -47,10 +47,14 @@ class Car {
     this.speed=2; this.vy=0; this.jumpTimer=Math.random()*100+50; this.health=100;
   }
   update(){
-    this.x += (Math.random()*2-1)*this.speed;
+    // Move randomly left/right
+    this.x += (Math.random()*4-2)*this.speed;
     this.jumpTimer--;
-    if(this.jumpTimer<=0){ this.vy=-5; this.jumpTimer=Math.random()*200+50; }
-    this.vy += 0.3; this.y += this.vy;
+    if(this.jumpTimer<=0){ 
+        this.vy=-12; // higher jump
+        this.jumpTimer=Math.random()*200+50; 
+    }
+    this.vy += 0.4; this.y += this.vy;
 
     if(this.y>780){ this.y=780; this.vy=0; }
     if(this.y>300 && this.y<320 && this.x>300 && this.x<1100){ this.y=300; this.vy=0; }
@@ -67,7 +71,7 @@ class Car {
 class NPC {
   constructor(x,y){
     this.x=x; this.y=y; this.width=20; this.height=20;
-    this.shootTimer=Math.random()*100+50;
+    this.shootTimer=Math.random()*200+100; // slower fire rate
   }
   update(){
     this.x += (Math.random()*2-1);
@@ -89,7 +93,7 @@ class NPC {
         rockets.push(new Rocket(this.x+this.width/2,this.y+this.height/2,dx,dy));
         shootSound.play();
       }
-      this.shootTimer=Math.random()*100+50;
+      this.shootTimer=Math.random()*200+100;
     }
   }
   draw(){ ctx.fillStyle='green'; ctx.fillRect(this.x,this.y,this.width,this.height);}
@@ -97,7 +101,7 @@ class NPC {
 
 // ===== Game Variables =====
 let rockets=[], cars=[], npcs=[];
-let rocketPlayer = {x:700, y:780, width:20, height:20, vy:0, health:100};
+let rocketPlayer = {x:700, y:280-20, width:20, height:20, vy:0, health:100}; // start on platform
 let keys={}, canShoot=true, score=0, gameStarted=false;
 
 // ===== Platforms =====
@@ -114,14 +118,14 @@ document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 function handlePlayer(){
   if(keys['KeyA'] && rocketPlayer.x>0) rocketPlayer.x -=4;
   if(keys['KeyD'] && rocketPlayer.x<canvas.width-rocketPlayer.width) rocketPlayer.x+=4;
-  if(keys['KeyW'] && rocketPlayer.y>=780) rocketPlayer.vy=-8;
+  if(keys['KeyW'] && rocketPlayer.y>=280-20) rocketPlayer.vy=-8; // jump from platform
 
   rocketPlayer.vy+=0.4;
   rocketPlayer.y+=rocketPlayer.vy;
 
   if(rocketPlayer.y>780){ rocketPlayer.y=780; rocketPlayer.vy=0; }
   if(rocketPlayer.y>300 && rocketPlayer.y<320 && rocketPlayer.x>300 && rocketPlayer.x<1100){
-    rocketPlayer.y=300; rocketPlayer.vy=0;
+    rocketPlayer.y=280-20; rocketPlayer.vy=0;
   }
 
   if(keys['Space'] && canShoot){
@@ -130,7 +134,6 @@ function handlePlayer(){
     else if(keys['ArrowDown']) dy=1;
     else if(keys['ArrowLeft']) dx=-1;
     else dx=1;
-
     rockets.push(new Rocket(rocketPlayer.x+rocketPlayer.width/2, rocketPlayer.y+rocketPlayer.height/2, dx, dy));
     canShoot=false;
     shootSound.play();
@@ -199,7 +202,7 @@ function gameLoop(){
 startButton.addEventListener('click', ()=>{
   titleScreen.style.display='none';
   gameStarted=true;
-  rocketPlayer={x:700,y:780,width:20,height:20,vy:0,health:100};
+  rocketPlayer={x:700,y:280-20,width:20,height:20,vy:0,health:100};
   rockets=[]; score=0; spawnCarsAndNPCs(); gameLoop();
 });
 
