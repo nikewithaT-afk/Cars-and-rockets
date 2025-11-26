@@ -1,70 +1,107 @@
-body {
-  margin: 0;
-  background: #111;
-  color: white;
-  font-family: Arial, sans-serif;
-  text-align: center;
-  overflow: hidden;
+:root{
+  --bg:#0f0f12;
+  --panel:#17171a;
+  --accent:#fff;
+  --muted:#999;
 }
 
-canvas {
-  display: block;
-  margin: 20px auto;
-  border: 2px solid white;
-  background: #222;
-  transform-origin: center center;
-  transition: transform 1s ease;
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--accent);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  text-align:center;
+  overflow:hidden;
 }
 
-#hud {
-  font-size: 18px;
-  margin: 5px auto;
+/* Canvas */
+canvas{
+  display:block;
+  margin:18px auto;
+  background:linear-gradient(#111,#0f0f12);
+  border:2px solid rgba(255,255,255,0.06);
+  transform-origin:center center;
+  transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+  box-shadow: 0 6px 30px rgba(0,0,0,0.6);
 }
 
-#titleScreen {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: #111;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  padding: 20px;
-  box-sizing: border-box;
-  z-index: 10;
+/* HUD */
+#hud{
+  display:flex;
+  gap:18px;
+  justify-content:center;
+  align-items:center;
+  padding-top:8px;
+  font-size:18px;
 }
 
-#titleScreen button {
-  padding: 10px 20px;
-  font-size: 20px;
-  cursor: pointer;
-  margin-top: 20px;
+/* Title / shop panel */
+#titleScreen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:24px;
+  background:linear-gradient(180deg, rgba(0,0,0,0.5), rgba(0,0,0,0.75));
+  z-index:50;
 }
 
-#instructions {
-  text-align: left;
-  max-width: 600px;
-  line-height: 1.5;
-  margin-top: 20px;
+#titleScreen h1{
+  margin:0 0 12px 0;
+  font-size:34px;
 }
 
-#diagram {
-  display: flex;
-  justify-content: space-around;
-  margin-top: 10px;
+#instructions{
+  max-width:760px;
+  text-align:left;
+  margin-bottom:12px;
+  color:#ddd;
+  line-height:1.45;
+  padding:8px 12px;
+  border-radius:8px;
+  background:rgba(255,255,255,0.02);
 }
 
-.player, .car, .npc {
-  border: 2px solid white;
-  padding: 5px;
-  margin: 5px;
+#diagram{ display:flex; gap:12px; margin-top:10px; align-items:center; }
+.player,.car,.npc{
+  border:2px solid #fff;
+  padding:6px;
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+}
+.player{ width:36px; height:36px; background:#e74c3c; }
+.car{ width:56px; height:22px; background:#3498db; }
+.npc{ width:24px; height:24px; background:#2ecc71; }
+
+/* shop area */
+#shop{
+  margin-top:10px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+  justify-content:center;
 }
 
-.player { width: 30px; height: 30px; background: red; }
-.car { width: 50px; height: 20px; background: blue; }
-.npc { width: 20px; height: 20px; background: green; }
+/* buttons */
+button{
+  background:#2d2d2d;
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.08);
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:16px;
+}
+button:hover{ transform:translateY(-2px); transition:all 120ms ease; }
 
-#shop {
-  margin-top: 20px;
+/* mobile resize */
+@media (max-width:1000px){
+  canvas{ width:100%; height:auto; }
+  #instructions{ max-width:90%; }
 }
