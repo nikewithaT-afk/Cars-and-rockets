@@ -64,3 +64,7 @@ canvas {
 .player { width: 30px; height: 30px; background: red; }
 .car { width: 50px; height: 20px; background: blue; }
 .npc { width: 20px; height: 20px; background: green; }
+
+#shop {
+  margin-top: 20px;
+}
