@@ -1,3 +1,5 @@
+document.addEventListener('DOMContentLoaded', ()=>{
+
 // ===== Canvas Setup =====
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
@@ -193,10 +195,12 @@ function gameLoop(){
   requestAnimationFrame(gameLoop);
 }
 
-// ===== Start =====
+// ===== Start Button =====
 startButton.addEventListener('click', ()=>{
   titleScreen.style.display='none';
   gameStarted=true;
   rocketPlayer={x:700,y:780,width:20,height:20,vy:0,health:100};
   rockets=[]; score=0; spawnCarsAndNPCs(); gameLoop();
 });
+
+}); // DOMContentLoaded end
