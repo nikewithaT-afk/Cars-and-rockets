@@ -2,16 +2,18 @@ body {
   margin: 0;
   background: #111;
   color: white;
-  text-align: center;
   font-family: Arial, sans-serif;
+  text-align: center;
   overflow: hidden;
 }
 
 canvas {
-  background: #222;
   display: block;
   margin: 20px auto;
   border: 2px solid white;
+  background: #222;
+  transform-origin: center center;
+  transition: transform 1s ease;
 }
 
 #hud {
@@ -28,9 +30,9 @@ canvas {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 10;
   padding: 20px;
   box-sizing: border-box;
+  z-index: 10;
 }
 
 #titleScreen button {
@@ -43,6 +45,22 @@ canvas {
 #instructions {
   text-align: left;
   max-width: 600px;
-  margin-top: 20px;
   line-height: 1.5;
+  margin-top: 20px;
 }
+
+#diagram {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 10px;
+}
+
+.player, .car, .npc {
+  border: 2px solid white;
+  padding: 5px;
+  margin: 5px;
+}
+
+.player { width: 30px; height: 30px; background: red; }
+.car { width: 50px; height: 20px; background: blue; }
+.npc { width: 20px; height: 20px; background: green; }
