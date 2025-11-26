@@ -17,17 +17,10 @@ const timerDisplay = document.getElementById('timer');
 let shootSound = new Audio('https://freesound.org/data/previews/146/146724_2615113-lq.mp3');
 let explosionSound = new Audio('https://freesound.org/data/previews/235/235968_3988955-lq.mp3');
 
-// Images
-const playerImg = new Image(); playerImg.src = 'images/player.png';
-const npcImg = new Image(); npcImg.src = 'images/npc.png';
-const carImg = new Image(); carImg.src = 'images/car.png';
-const rocketImg = new Image(); rocketImg.src = 'images/rocket.png';
-
+// Classes
 class Rocket {
   constructor(x, y, dx, dy){
-    this.x = x; this.y = y; this.width = 8; this.height = 8;
-    this.speed = 3; this.dx = dx; this.dy = dy;
-    this.exploding = false; this.explosionFrame = 0;
+    this.x = x; this.y = y; this.dx = dx; this.dy = dy; this.speed = 3; this.exploding = false; this.explosionFrame = 0;
   }
   update(){
     if(this.exploding){ this.explosionFrame++; return; }
@@ -36,34 +29,30 @@ class Rocket {
   }
   draw(){
     if(this.exploding){
-      ctx.fillStyle='orange';
-      ctx.beginPath();
-      ctx.arc(this.x+this.width/2,this.y+this.height/2,this.explosionFrame*2,0,Math.PI*2);
-      ctx.fill();
+      ctx.font = '30px Arial';
+      ctx.fillText('💥', this.x, this.y+15);
       return;
     }
-    ctx.drawImage(rocketImg, this.x, this.y, this.width, this.height);
+    ctx.font = '20px Arial';
+    ctx.fillText('🔥', this.x, this.y+15);
   }
   explode(){ this.exploding=true; explosionSound.play(); }
 }
 
 class Car {
   constructor(x,y){
-    this.x=x; this.y=y; this.width=30; this.height=20;
-    this.speed = Math.random() * 2 + 1; 
-    this.vy=0; this.jumpCooldown=Math.random()*120+60; this.direction = Math.random()<0.5?-1:1;
-    this.health=100;
+    this.x=x; this.y=y; this.vy=0; this.width=30; this.height=20;
+    this.speed = Math.random()*2+1; this.jumpCooldown=Math.random()*120+60; 
+    this.direction = Math.random()<0.5?-1:1; this.health=100;
   }
   update(){
-    // Random horizontal movement
     this.x += this.direction * this.speed;
-    if(Math.random() < 0.01) this.direction*=-1;
+    if(Math.random()<0.01) this.direction*=-1;
 
-    // Jump occasionally
     this.jumpCooldown--;
     if(this.jumpCooldown<=0 && this.y>=780){
-      this.vy = -10 - Math.random()*5;
-      this.jumpCooldown = Math.random()*120+60;
+      this.vy=-10-Math.random()*5;
+      this.jumpCooldown=Math.random()*120+60;
     }
 
     this.vy +=0.4;
@@ -71,10 +60,10 @@ class Car {
 
     if(this.y>780){ this.y=780; this.vy=0;}
     if(this.x<0){ this.x=0; this.direction*=-1;}
-    if(this.x>canvas.width-this.width){ this.x=canvas.width-this.width; this.direction*=-1;}
+    if(this.x>canvas.width-30){ this.x=canvas.width-30; this.direction*=-1;}
   }
-  draw(){ ctx.drawImage(carImg,this.x,this.y,this.width,this.height);}
-  takeDamage(dmg){ this.health-=dmg;}
+  draw(){ ctx.font='25px Arial'; ctx.fillText('🚗', this.x, this.y+20); }
+  takeDamage(dmg){ this.health-=dmg; }
 }
 
 class NPC {
@@ -83,60 +72,44 @@ class NPC {
     this.shootTimer=Math.random()*200+100; this.lives=3;
   }
   update(){
-    let dir = Math.random()*2-1;
-    this.x += dir*1.5;
+    this.x += (Math.random()*2-1)*1.5;
     if(this.x<200) this.x=200;
-    if(this.x>1400-this.width) this.x=1400-this.width;
+    if(this.x>1400-20) this.x=1400-20;
 
     this.shootTimer--;
     if(this.shootTimer<=0 && cars.length>0){
-      let nearestCar = null; let minDist=2000;
-      for(let car of cars){
-        let dist=Math.hypot(this.x-car.x,this.y-car.y);
-        if(dist<minDist){ minDist=dist; nearestCar=car;}
-      }
-      if(nearestCar){
-        let dx=nearestCar.x-this.x; let dy=nearestCar.y-this.y;
-        let mag=Math.hypot(dx,dy); dx/=mag; dy/=mag;
-        rockets.push(new Rocket(this.x+this.width/2,this.y+this.height/2, dx, dy));
-        shootSound.play();
-      }
+      let nearestCar = cars.reduce((a,b)=> Math.hypot(this.x-b.x,this.y-b.y)<Math.hypot(this.x-a.x,this.y-a.y)?b:a );
+      let dx = nearestCar.x-this.x; let dy = nearestCar.y-this.y;
+      let mag = Math.hypot(dx,dy); dx/=mag; dy/=mag;
+      rockets.push(new Rocket(this.x,this.y, dx, dy));
+      shootSound.play();
       this.shootTimer=Math.random()*200+100;
     }
   }
-  draw(){ ctx.drawImage(npcImg,this.x,this.y,this.width,this.height);}
+  draw(){ ctx.font='20px Arial'; ctx.fillText('🟩', this.x, this.y+15); }
 }
 
-// Game variables
-let rockets=[], cars=[], npcs=[];
+// Player
 let rocketPlayer = {x:700,y:280,width:20,height:20,vy:0,lives:3};
-let keys={}, score=0, gameStarted=false, points=0;
-let wave=1, timer=60;
+let keys={}, rockets=[], cars=[], npcs=[], score=0, points=0, wave=1, timer=60, gameStarted=false;
 
 document.addEventListener('keydown', e=>{ keys[e.code]=true; });
 document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
-// Player
 function handlePlayer(){
-  if(keys['KeyA'] && rocketPlayer.x>0) rocketPlayer.x-=4;
-  if(keys['KeyD'] && rocketPlayer.x<canvas.width-rocketPlayer.width) rocketPlayer.x+=4;
+  if(keys['KeyA'] && rocketPlayer.x>200) rocketPlayer.x-=4;
+  if(keys['KeyD'] && rocketPlayer.x<1400-rocketPlayer.width) rocketPlayer.x+=4;
+  rocketPlayer.vy +=0.4; rocketPlayer.y += rocketPlayer.vy;
 
-  rocketPlayer.vy +=0.4;
-  rocketPlayer.y += rocketPlayer.vy;
-
-  let platY = 280, platX=200, platW=1200;
-  if(rocketPlayer.y+rocketPlayer.height >= platY &&
-     rocketPlayer.y+rocketPlayer.height <= platY +10 &&
-     rocketPlayer.x+rocketPlayer.width > platX &&
-     rocketPlayer.x < platX + platW &&
-     rocketPlayer.vy>=0){
-       rocketPlayer.y = platY - rocketPlayer.height;
-       rocketPlayer.vy=0;
+  let platY=280, platX=200, platW=1200;
+  if(rocketPlayer.y+20 >= platY && rocketPlayer.y+20 <= platY+10 && rocketPlayer.x+20>platX && rocketPlayer.x<platX+platW && rocketPlayer.vy>=0){
+    rocketPlayer.y = platY-20; rocketPlayer.vy=0;
   }
-  if(rocketPlayer.y+rocketPlayer.height>780){ rocketPlayer.y=780-rocketPlayer.height; rocketPlayer.vy=0;}
+  if(rocketPlayer.y+20>780){ rocketPlayer.y=780-20; rocketPlayer.vy=0;}
 }
+function drawPlayer(){ ctx.font='25px Arial'; ctx.fillText('🟥', rocketPlayer.x, rocketPlayer.y+20); }
 
-// Shoot
+// Shoot toward cursor
 canvas.addEventListener('click', e=>{
   let rect = canvas.getBoundingClientRect();
   let mouseX = e.clientX - rect.left;
@@ -148,7 +121,7 @@ canvas.addEventListener('click', e=>{
   shootSound.play();
 });
 
-// Spawn
+// Spawn cars & NPCs
 function spawnCarsAndNPCs(){
   cars=[]; for(let i=0;i<15;i++){ cars.push(new Car(Math.random()*1200+100,780)); }
   npcs=[]; 
@@ -170,19 +143,18 @@ function gameLoop(){
   ctx.fillStyle='gray'; ctx.fillRect(200,280,1200,20);
 
   handlePlayer();
-  ctx.drawImage(playerImg, rocketPlayer.x, rocketPlayer.y, rocketPlayer.width, rocketPlayer.height);
+  drawPlayer();
 
   for(let npc of npcs){ npc.update(); npc.draw(); }
-
   for(let i=rockets.length-1;i>=0;i--){
     rockets[i].update(); rockets[i].draw();
     for(let j=cars.length-1;j>=0;j--){
       let car = cars[j];
-      if(rockets[i].x<car.x+car.width && rockets[i].x+rockets[i].width>car.x &&
-         rockets[i].y<car.y+car.height && rockets[i].y+rockets[i].height>car.y){
+      if(rockets[i].x<car.x+car.width && rockets[i].x+8>car.x &&
+         rockets[i].y<car.y+car.height && rockets[i].y+8>car.y){
            car.takeDamage(50); rockets[i].explode();
            setTimeout(()=>{ rockets.splice(i,1); },50);
-           if(car.health<=0){ cars.splice(j,1); score+=10; points+=10; shopPointsDisplay.innerText=points;}
+           if(car.health<=0){ cars.splice(j,1); score+=10; points+=10; shopPointsDisplay.innerText=points; }
            break;
       }
     }
@@ -219,6 +191,7 @@ function gameLoop(){
   requestAnimationFrame(gameLoop);
 }
 
+// Timer
 function countdown(){
   if(!gameStarted) return;
   timer-=0.016;
