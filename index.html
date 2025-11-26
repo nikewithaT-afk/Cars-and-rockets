@@ -12,10 +12,10 @@
   <h1>Rockets vs Cars</h1>
   <div id="instructions">
     <p><strong>Aim:</strong> Destroy all cars before they hit you or your NPC allies!</p>
-    <p><strong>Controls:</strong> Move: A/D | Jump: W | Shoot: Arrow Keys + Space</p>
-    <p><strong>NPCs:</strong> Help you by shooting cars automatically but slower.</p>
-    <p><strong>Cars:</strong> Jump and try to hit you. Avoid them!</p>
-    <p><strong>Lives:</strong> You and NPCs have 3 lives each. Lose all lives → Game Over.</p>
+    <p><strong>Player Controls:</strong> Move: A/D | Shoot: Click toward cursor</p>
+    <p><strong>NPCs:</strong> Help shoot cars. There are 6 NPCs on the platform.</p>
+    <p><strong>Cars:</strong> Jump randomly and try to hit the NPCs!</p>
+    <p><strong>Lives:</strong> Player & NPCs have 3 lives each. Lose all lives → Game Over.</p>
     <div id="diagram">
       <div class="player">Cube = Player</div>
       <div class="car">Rectangle = Car</div>
@@ -27,10 +27,10 @@
 
 <div id="hud">
   <span id="score">Score: 0</span>
-  <span id="lives">Lives: 3</span>
+  <span id="lives">Player Lives: 3</span>
 </div>
 
-<canvas id="gameCanvas" width="1400" height="800"></canvas>
+<canvas id="gameCanvas" width="1600" height="800"></canvas>
 
 <script src="script.js"></script>
 </body>
