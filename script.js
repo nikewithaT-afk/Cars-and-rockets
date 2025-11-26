@@ -2,10 +2,16 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
+
 const titleScreen = document.getElementById('titleScreen');
 const startButton = document.getElementById('startGame');
+const buyNPCButton = document.getElementById('buyNPC');
+const shopPointsDisplay = document.getElementById('shopPoints');
+
 const scoreDisplay = document.getElementById('score');
 const livesDisplay = document.getElementById('lives');
+const waveDisplay = document.getElementById('wave');
+const timerDisplay = document.getElementById('timer');
 
 let shootSound = new Audio('https://freesound.org/data/previews/146/146724_2615113-lq.mp3');
 let explosionSound = new Audio('https://freesound.org/data/previews/235/235968_3988955-lq.mp3');
@@ -40,23 +46,24 @@ class Car {
     this.speed=2; this.vy=0; this.jumpCooldown=Math.random()*50+30; this.health=100;
   }
   update(){
-    // Move horizontally randomly
+    // Horizontal random movement
     this.x += Math.random()*4-2;
 
-    // Jump randomly toward platform
+    // Jump toward platform if on ground
     this.jumpCooldown--;
     if(this.jumpCooldown <=0 && this.y>=780){
-      this.vy=-15;
-      this.jumpCooldown = Math.random()*100+50;
+      let targetY = 280;
+      let jumpPower = Math.sqrt(2 * 0.4 * (780 - targetY)) * 1.2;
+      this.vy = -jumpPower;
+      this.jumpCooldown = Math.random() * 120 + 50;
     }
 
-    this.vy += 0.4; this.y += this.vy;
+    this.vy += 0.4;
+    this.y += this.vy;
 
-    // Platform collision
+    // Floor collision
     if(this.y>780){ this.y=780; this.vy=0; }
-    if(this.y>300 && this.y<320 && this.x>200 && this.x<1400){ this.y=280; this.vy=0; }
-
-    // arena bounds
+    // Arena bounds
     if(this.x<0) this.x=0;
     if(this.x>canvas.width-this.width) this.x=canvas.width-this.width;
   }
@@ -71,18 +78,27 @@ class NPC {
     this.lives=3;
   }
   update(){
+    // Move randomly on platform
+    let dir = Math.random()*2-1;
+    this.x += dir*1.5;
+    if(this.x<200) this.x=200;
+    if(this.x>1400-this.width) this.x=1400-this.width;
+
+    // Shoot at nearest car
     this.shootTimer--;
     if(this.shootTimer<=0){
-      let nearestCar = null; let minDist=2000;
-      for(let car of cars){
-        let dist=Math.hypot(this.x-car.x,this.y-car.y);
-        if(dist<minDist){ minDist=dist; nearestCar=car;}
-      }
-      if(nearestCar){
-        let dx=nearestCar.x-this.x; let dy=nearestCar.y-this.y;
-        let mag=Math.hypot(dx,dy); dx/=mag; dy/=mag;
-        rockets.push(new Rocket(this.x+this.width/2,this.y+this.height/2, dx, dy));
-        shootSound.play();
+      if(cars.length>0){
+        let nearestCar = null; let minDist=2000;
+        for(let car of cars){
+          let dist=Math.hypot(this.x-car.x,this.y-car.y);
+          if(dist<minDist){ minDist=dist; nearestCar=car;}
+        }
+        if(nearestCar){
+          let dx=nearestCar.x-this.x; let dy=nearestCar.y-this.y;
+          let mag=Math.hypot(dx,dy); dx/=mag; dy/=mag;
+          rockets.push(new Rocket(this.x+this.width/2,this.y+this.height/2, dx, dy));
+          shootSound.play();
+        }
       }
       this.shootTimer=Math.random()*200+100;
     }
@@ -90,27 +106,37 @@ class NPC {
   draw(){ ctx.fillStyle='green'; ctx.fillRect(this.x,this.y,this.width,this.height);}
 }
 
+// Game variables
 let rockets=[], cars=[], npcs=[];
 let rocketPlayer = {x:700, y:280, width:20, height:20, vy:0, lives:3};
-let keys={}, canShoot=true, score=0, gameStarted=false;
-
-function drawPlatforms(){
-  ctx.fillStyle='gray';
-  ctx.fillRect(200,300,1200,20);
-}
+let keys={}, score=0, gameStarted=false, points=0;
+let wave=1, timer=60;
 
 document.addEventListener('keydown', e=>{ keys[e.code]=true; });
 document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 
+// Player controls
 function handlePlayer(){
   if(keys['KeyA'] && rocketPlayer.x>0) rocketPlayer.x-=4;
   if(keys['KeyD'] && rocketPlayer.x<canvas.width-rocketPlayer.width) rocketPlayer.x+=4;
 
-  rocketPlayer.vy+=0.4; rocketPlayer.y+=rocketPlayer.vy;
-  if(rocketPlayer.y>780){ rocketPlayer.y=780; rocketPlayer.vy=0; }
-  if(rocketPlayer.y>300 && rocketPlayer.y<320 && rocketPlayer.x>200 && rocketPlayer.x<1400){ rocketPlayer.y=280; rocketPlayer.vy=0; }
+  rocketPlayer.vy +=0.4;
+  rocketPlayer.y += rocketPlayer.vy;
+
+  // Platform collision
+  let platY = 280, platX=200, platW=1200;
+  if(rocketPlayer.y+rocketPlayer.height >= platY &&
+     rocketPlayer.y+rocketPlayer.height <= platY +10 &&
+     rocketPlayer.x+rocketPlayer.width > platX &&
+     rocketPlayer.x < platX + platW &&
+     rocketPlayer.vy>=0){
+       rocketPlayer.y = platY - rocketPlayer.height;
+       rocketPlayer.vy=0;
+  }
+  if(rocketPlayer.y+rocketPlayer.height>780){ rocketPlayer.y=780-rocketPlayer.height; rocketPlayer.vy=0;}
 }
 
+// Shoot toward cursor
 canvas.addEventListener('click', e=>{
   let rect = canvas.getBoundingClientRect();
   let mouseX = e.clientX - rect.left;
@@ -123,42 +149,56 @@ canvas.addEventListener('click', e=>{
   shootSound.play();
 });
 
+// Spawn cars and NPCs
 function spawnCarsAndNPCs(){
-  cars=[]; for(let i=0;i<15;i++){ let x=Math.random()*1200+100; cars.push(new Car(x,780)); }
-  npcs=[]; for(let i=0;i<6;i++){ let x=250+i*200; npcs.push(new NPC(x,280)); }
+  cars=[]; for(let i=0;i<15;i++){ cars.push(new Car(Math.random()*1200+100,780)); }
+  // NPCs based on points upgrade
+  npcs=[]; 
+  let npcCount = Math.min(1 + Math.floor(points/100),6); // max 6 NPCs
+  for(let i=0;i<npcCount;i++){ npcs.push(new NPC(250+i*180,280)); }
 }
 
+// Shop
+buyNPCButton.addEventListener('click', ()=>{
+  if(points>=100){ points-=100; spawnCarsAndNPCs(); shopPointsDisplay.innerText=points; }
+});
+
+// Game loop
 function gameLoop(){
   if(!gameStarted) return;
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  drawPlatforms();
-  ctx.fillStyle='red'; ctx.fillRect(rocketPlayer.x,rocketPlayer.y,rocketPlayer.width,rocketPlayer.height);
+
+  // Draw platform
+  ctx.fillStyle='gray'; ctx.fillRect(200,280,1200,20);
+
+  // Update/draw player
   handlePlayer();
+  ctx.fillStyle='red'; ctx.fillRect(rocketPlayer.x,rocketPlayer.y,rocketPlayer.width,rocketPlayer.height);
 
-  for(let npc of npcs){ 
-    npc.update(); 
-    npc.draw(); 
-  }
+  // Update/draw NPCs
+  for(let npc of npcs){ npc.update(); npc.draw(); }
 
+  // Update rockets
   for(let i=rockets.length-1;i>=0;i--){
     rockets[i].update(); rockets[i].draw();
     for(let j=cars.length-1;j>=0;j--){
-      let car=cars[j];
+      let car = cars[j];
       if(rockets[i].x<car.x+car.width && rockets[i].x+rockets[i].width>car.x &&
          rockets[i].y<car.y+car.height && rockets[i].y+rockets[i].height>car.y){
            car.takeDamage(50); rockets[i].explode();
            setTimeout(()=>{ rockets.splice(i,1); },50);
-           if(car.health<=0){ cars.splice(j,1); score+=10; } break;
+           if(car.health<=0){ cars.splice(j,1); score+=10; points+=10; shopPointsDisplay.innerText=points;}
+           break;
       }
     }
-    if(rockets[i] && (rockets[i].x<0||rockets[i].x>canvas.width||rockets[i].y<0||rockets[i].y>canvas.height)){
+    if(rockets[i] && (rockets[i].x<0 || rockets[i].x>canvas.width || rockets[i].y<0 || rockets[i].y>canvas.height)){
       rockets.splice(i,1);
     }
   }
 
+  // Update cars
   for(let car of cars){ 
-    car.update(); car.draw(); 
-
+    car.update(); car.draw();
     // Collision with NPCs
     for(let npc of npcs){
       if(car.x<npc.x+npc.width && car.x+car.width>npc.x &&
@@ -168,7 +208,6 @@ function gameLoop(){
            if(npc.lives<=0){ npcs.splice(npcs.indexOf(npc),1);}
       }
     }
-
     // Collision with player
     if(car.x<rocketPlayer.x+rocketPlayer.width && car.x+car.width>rocketPlayer.x &&
        car.y<rocketPlayer.y+rocketPlayer.height && car.y+car.height>rocketPlayer.y){
@@ -178,22 +217,34 @@ function gameLoop(){
     }
   }
 
+  // HUD
   scoreDisplay.innerText=`Score: ${score}`;
   livesDisplay.innerText=`Player Lives: ${rocketPlayer.lives}`;
+  waveDisplay.innerText=`Wave: ${wave}`;
+  timerDisplay.innerText=`Time: ${Math.floor(timer)}`;
 
-  if(cars.length==0){ setTimeout(()=>{ alert("You Win!"); document.location.reload(); },100); gameStarted=false;}
+  // Win/lose checks
+  if(cars.length==0){ setTimeout(()=>{ alert("You Win!"); document.location.reload(); },100); gameStarted=false; }
 
   requestAnimationFrame(gameLoop);
 }
 
-// Start Button + Zoom-Out
+// Timer
+function countdown(){
+  if(!gameStarted) return;
+  timer-=0.016;
+  if(timer<=0){ alert("Time's up! You Survived!"); document.location.reload(); gameStarted=false; }
+  setTimeout(countdown,16);
+}
+
+// Start Game
 startButton.addEventListener('click', ()=>{
   canvas.style.transform='scale(0.6)';
   setTimeout(()=>{
     titleScreen.style.display='none';
     gameStarted=true;
     rocketPlayer={x:700,y:280,width:20,height:20,vy:0,lives:3};
-    rockets=[]; score=0; spawnCarsAndNPCs(); gameLoop();
+    rockets=[]; score=0; spawnCarsAndNPCs(); gameLoop(); countdown();
   },1000);
 });
 
