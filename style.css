@@ -4,6 +4,7 @@ body {
   color: white;
   text-align: center;
   font-family: Arial, sans-serif;
+  overflow: hidden;
 }
 
 canvas {
@@ -13,9 +14,9 @@ canvas {
   border: 2px solid white;
 }
 
-#score {
+#hud {
   font-size: 18px;
-  margin-bottom: 10px;
+  margin: 5px auto;
 }
 
 #titleScreen {
