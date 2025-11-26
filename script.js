@@ -11,7 +11,7 @@ class Rocket {
     this.height = 4;
     this.speed = 5;
   }
-  draw(){ ctx.fillStyle = 'red'; ctx.fillRect(this.x, this.y, this.width, this.height); }
+  draw(){ ctx.fillStyle='red'; ctx.fillRect(this.x, this.y, this.width, this.height); }
   update(){ this.x += this.speed; }
 }
 
@@ -24,26 +24,34 @@ class Car {
     this.speed = 2;
     this.health = 100;
   }
-  draw(){ ctx.fillStyle = 'blue'; ctx.fillRect(this.x, this.y, this.width, this.height); }
-  update(){ this.x += this.speed; }
+  draw(){ ctx.fillStyle='blue'; ctx.fillRect(this.x, this.y, this.width, this.height); }
+  update(){
+    // Move right
+    this.x += this.speed;
+
+    // Simple ramp logic
+    if(this.x > 100 && this.x < 200) this.y = 400 - ((this.x-100)/100)*100; // left ramp slope
+    else if(this.x > 600 && this.x < 700) this.y = 400 - ((700-this.x)/100)*100; // right ramp slope
+    else if(this.x >= 200 && this.x <= 600) this.y = 480; // ground
+  }
   takeDamage(dmg){ this.health -= dmg; }
 }
 
 // ===== Game Variables =====
 let rockets = [];
-let cars = [new Car(50, 480), new Car(150, 480)];
+let cars = [new Car(50,480), new Car(150,480), new Car(700,480)];
 let rocketPlayerX = 400;
 let rocketPlayerY = 280;
 let rocketSpeed = 5;
+let rocketHealth = 100;
+let score = 0;
 
 // ===== Draw Platforms & Ramps =====
 function drawPlatforms() {
-  // Main platform
   ctx.fillStyle = 'gray';
-  ctx.fillRect(200, 300, 400, 20);
-  // Ramps
-  ctx.fillRect(100, 400, 100, 10);
-  ctx.fillRect(600, 400, 100, 10);
+  ctx.fillRect(200, 300, 400, 20); // main platform
+  ctx.fillRect(100, 400, 100, 10); // left ramp
+  ctx.fillRect(600, 400, 100, 10); // right ramp
 }
 
 // ===== Player Controls =====
@@ -54,10 +62,11 @@ document.addEventListener('keyup', e => { keys[e.code] = false; });
 function handleRocketPlayer() {
   // Move left/right
   if(keys['KeyA'] && rocketPlayerX > 200) rocketPlayerX -= 4;
-  if(keys['KeyD'] && rocketPlayerX < 590) rocketPlayerX += 4;
-  // Shoot
+  if(keys['KeyD'] && rocketPlayerX < 580) rocketPlayerX += 4;
+
+  // Shoot rocket
   if(keys['Space'] && canShoot){
-    rockets.push(new Rocket(rocketPlayerX + 10, rocketPlayerY));
+    rockets.push(new Rocket(rocketPlayerX + 5, rocketPlayerY));
     canShoot = false;
     setTimeout(()=>{ canShoot = true; }, 300); // cooldown
   }
@@ -92,7 +101,10 @@ function gameLoop(){
          rockets[i].y + rockets[i].height > car.y){
            car.takeDamage(50);
            rockets.splice(i,1);
-           if(car.health <= 0) cars.splice(j,1);
+           if(car.health <= 0){
+             cars.splice(j,1);
+             score += 10;
+           }
            break;
       }
     }
@@ -105,6 +117,21 @@ function gameLoop(){
   for(let car of cars){
     car.update();
     car.draw();
+
+    // If car reaches platform, damage rocket player
+    if(car.y <= 300 && car.x >= rocketPlayerX && car.x <= rocketPlayerX + 20){
+      rocketHealth -= 10;
+      car.x = -50; // reset car offscreen
+    }
+  }
+
+  // Update score and health display
+  document.getElementById('score').innerText = `Score: ${score} | Rocket Health: ${rocketHealth}`;
+
+  // Check game over
+  if(rocketHealth <= 0){
+    alert("Game Over! Final Score: " + score);
+    document.location.reload();
   }
 
   requestAnimationFrame(gameLoop);
