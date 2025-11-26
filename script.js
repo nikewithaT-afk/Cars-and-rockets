@@ -40,21 +40,21 @@ class Car {
     this.speed=2; this.vy=0; this.jumpCooldown=Math.random()*50+30; this.health=100;
   }
   update(){
-    // Move towards player
-    if(rocketPlayer.x < this.x) this.x -= this.speed;
-    else this.x += this.speed;
+    // Move horizontally randomly
+    this.x += Math.random()*4-2;
 
-    // Jump towards player if on ground
+    // Jump randomly toward platform
     this.jumpCooldown--;
     if(this.jumpCooldown <=0 && this.y>=780){
-      this.vy=-12;
+      this.vy=-15;
       this.jumpCooldown = Math.random()*100+50;
     }
 
     this.vy += 0.4; this.y += this.vy;
 
+    // Platform collision
     if(this.y>780){ this.y=780; this.vy=0; }
-    if(this.y>300 && this.y<320 && this.x>300 && this.x<1100){ this.y=280; this.vy=0; }
+    if(this.y>300 && this.y<320 && this.x>200 && this.x<1400){ this.y=280; this.vy=0; }
 
     // arena bounds
     if(this.x<0) this.x=0;
@@ -81,7 +81,7 @@ class NPC {
       if(nearestCar){
         let dx=nearestCar.x-this.x; let dy=nearestCar.y-this.y;
         let mag=Math.hypot(dx,dy); dx/=mag; dy/=mag;
-        rockets.push(new Rocket(this.x+this.width/2,this.y+this.height/2,dx,dy));
+        rockets.push(new Rocket(this.x+this.width/2,this.y+this.height/2, dx, dy));
         shootSound.play();
       }
       this.shootTimer=Math.random()*200+100;
@@ -96,7 +96,7 @@ let keys={}, canShoot=true, score=0, gameStarted=false;
 
 function drawPlatforms(){
   ctx.fillStyle='gray';
-  ctx.fillRect(300,300,800,20);
+  ctx.fillRect(200,300,1200,20);
 }
 
 document.addEventListener('keydown', e=>{ keys[e.code]=true; });
@@ -105,25 +105,27 @@ document.addEventListener('keyup', e=>{ keys[e.code]=false; });
 function handlePlayer(){
   if(keys['KeyA'] && rocketPlayer.x>0) rocketPlayer.x-=4;
   if(keys['KeyD'] && rocketPlayer.x<canvas.width-rocketPlayer.width) rocketPlayer.x+=4;
-  if(keys['KeyW'] && rocketPlayer.y>=280) rocketPlayer.vy=-8;
 
   rocketPlayer.vy+=0.4; rocketPlayer.y+=rocketPlayer.vy;
   if(rocketPlayer.y>780){ rocketPlayer.y=780; rocketPlayer.vy=0; }
-  if(rocketPlayer.y>300 && rocketPlayer.y<320 && rocketPlayer.x>300 && rocketPlayer.x<1100){ rocketPlayer.y=280; rocketPlayer.vy=0; }
-
-  if(keys['Space'] && canShoot){
-    let dx=0, dy=0;
-    if(keys['ArrowUp']) dy=-1; else if(keys['ArrowDown']) dy=1;
-    else if(keys['ArrowLeft']) dx=-1; else dx=1;
-    rockets.push(new Rocket(rocketPlayer.x+rocketPlayer.width/2, rocketPlayer.y+rocketPlayer.height/2, dx, dy));
-    canShoot=false; shootSound.play();
-    setTimeout(()=>{ canShoot=true; },300);
-  }
+  if(rocketPlayer.y>300 && rocketPlayer.y<320 && rocketPlayer.x>200 && rocketPlayer.x<1400){ rocketPlayer.y=280; rocketPlayer.vy=0; }
 }
 
+canvas.addEventListener('click', e=>{
+  let rect = canvas.getBoundingClientRect();
+  let mouseX = e.clientX - rect.left;
+  let mouseY = e.clientY - rect.top;
+  let dx = mouseX - (rocketPlayer.x+rocketPlayer.width/2);
+  let dy = mouseY - (rocketPlayer.y+rocketPlayer.height/2);
+  let mag = Math.hypot(dx,dy);
+  dx/=mag; dy/=mag;
+  rockets.push(new Rocket(rocketPlayer.x+rocketPlayer.width/2, rocketPlayer.y+rocketPlayer.height/2, dx, dy));
+  shootSound.play();
+});
+
 function spawnCarsAndNPCs(){
-  cars=[]; for(let i=0;i<15;i++){ let x=Math.random()*1100+150; cars.push(new Car(x,780)); }
-  npcs=[]; for(let i=0;i<3;i++){ let x=350+i*150; npcs.push(new NPC(x,280)); }
+  cars=[]; for(let i=0;i<15;i++){ let x=Math.random()*1200+100; cars.push(new Car(x,780)); }
+  npcs=[]; for(let i=0;i<6;i++){ let x=250+i*200; npcs.push(new NPC(x,280)); }
 }
 
 function gameLoop(){
@@ -132,7 +134,11 @@ function gameLoop(){
   drawPlatforms();
   ctx.fillStyle='red'; ctx.fillRect(rocketPlayer.x,rocketPlayer.y,rocketPlayer.width,rocketPlayer.height);
   handlePlayer();
-  for(let npc of npcs){ npc.update(); npc.draw(); }
+
+  for(let npc of npcs){ 
+    npc.update(); 
+    npc.draw(); 
+  }
 
   for(let i=rockets.length-1;i>=0;i--){
     rockets[i].update(); rockets[i].draw();
@@ -152,7 +158,18 @@ function gameLoop(){
 
   for(let car of cars){ 
     car.update(); car.draw(); 
-    // check collision with player
+
+    // Collision with NPCs
+    for(let npc of npcs){
+      if(car.x<npc.x+npc.width && car.x+car.width>npc.x &&
+         car.y<npc.y+npc.height && car.y+car.height>npc.y){
+           npc.lives--;
+           car.vy=-5; car.y-=10;
+           if(npc.lives<=0){ npcs.splice(npcs.indexOf(npc),1);}
+      }
+    }
+
+    // Collision with player
     if(car.x<rocketPlayer.x+rocketPlayer.width && car.x+car.width>rocketPlayer.x &&
        car.y<rocketPlayer.y+rocketPlayer.height && car.y+car.height>rocketPlayer.y){
          rocketPlayer.lives--;
@@ -162,23 +179,22 @@ function gameLoop(){
   }
 
   scoreDisplay.innerText=`Score: ${score}`;
-  livesDisplay.innerText=`Lives: ${rocketPlayer.lives}`;
+  livesDisplay.innerText=`Player Lives: ${rocketPlayer.lives}`;
 
   if(cars.length==0){ setTimeout(()=>{ alert("You Win!"); document.location.reload(); },100); gameStarted=false;}
 
   requestAnimationFrame(gameLoop);
 }
 
-// ===== Start Button + Zoom =====
+// Start Button + Zoom-Out
 startButton.addEventListener('click', ()=>{
-  // Zoom-out effect
   canvas.style.transform='scale(0.6)';
   setTimeout(()=>{
     titleScreen.style.display='none';
     gameStarted=true;
     rocketPlayer={x:700,y:280,width:20,height:20,vy:0,lives:3};
     rockets=[]; score=0; spawnCarsAndNPCs(); gameLoop();
-  },1000); // match zoom duration
+  },1000);
 });
 
 });
